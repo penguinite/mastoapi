@@ -1,5 +1,5 @@
 import std/[json, times, strutils, options]
-export json, times, options
+export json, times, options, strutils
 
 # Various helper functions for dealing with the Response object
 
