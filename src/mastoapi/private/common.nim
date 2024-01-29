@@ -1,19 +1,7 @@
-import std/[json, times, httpclient, strutils, streams, options]
-export json, times, httpclient, options
-
-proc set*(data: var MultipartData, stuff: openArray[(string,string)]) =
-  ## This procedule is used to set multiple values to MultipartData all at once.
-  ## It helps keep the codebase clean, but its a minor effect.
-  for key,val in items(stuff):
-    data[key] = val
+import std/[json, times, strutils, options]
+export json, times, options
 
 # Various helper functions for dealing with the Response object
-
-# Returns the body
-proc getBody*(obj: Response): string = return readAll(obj[].bodyStream)
-
-# Returns the HTTP Status Code (as int)
-func getCode*(obj: Response): int = return parseInt(split(obj[].status, " ")[0])
 
 # Templates and stuff for dealing with Json.
 proc isValid*(json: JsonNode, key: string): bool =

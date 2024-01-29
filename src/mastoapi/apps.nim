@@ -1,4 +1,4 @@
-import private/common
+import private/[common, http]
 
 const prefix = "/api/v1/apps"
 
@@ -19,16 +19,14 @@ proc createAppRaw*(instance: string, name: string, uris: string = "urn:ietf:wg:o
     "website": website
   })
 
-  var response = newHttpClient().request(url, HttpPost, "", nil, data)
+  var headers = newHttpHeaders()
+
+  var response = newHttpClient(msapiUserAgent).request(url, HttpPost, "", headers, data)
   
   if getCode(response) != 200:
     return none(JsonNode)
 
-  var json = getBody(response).parseJson()
-  
-  # We have to add this ourselves since the API does not supply it, and it's a good thing to do anyway.
-  json.add("scope", newJString(scopes))
-  return some(json)
+  return some(getBody(response).parseJson())
 
 proc createApp*(instance: string, name: string, uris: string = "urn:ietf:wg:oauth:2.0:oob", scopes:string = "", website: string = ""): Option[Application] =
   let jayson = createAppRaw(instance, name, uris, scopes, website)
