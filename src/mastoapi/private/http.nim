@@ -3,7 +3,7 @@
 ## Wraps over various different HTTP client implementations.
 ## This wrapper tries to mimic std/httpclient as reasonably as possible.
 
-const msapiHttpClient*{.strdefine.} = "puppy"
+const msapiHttpClient*{.strdefine.} = "httpclient"
 const msapiUserAgent*{.strdefine.} = "MastoAPI for Nim"
 const msapiTimeout*{.intdefine.} = 60
 const msapiSchemeUpgrade*{.booldefine.} = true
@@ -18,6 +18,9 @@ when msapihttpClient == "httpclient":
     ## It helps keep the codebase clean, but its a minor effect.
     for key,val in items(stuff):
       data[key] = val
+
+  proc set*(headers: var HttpHeaders, stuff: openArray[(string,string)]) =
+    headers = newHttpHeaders(stuff, false)
 
   # Returns the body
   proc getBody*(obj: Response): string = return readAll(obj[].bodyStream)
@@ -89,6 +92,7 @@ when msapihttpClient == "puppy":
 
 when msapihttpClient == "curly":
   # TODO: Pls finish this
+  {.warning: "Curly support is unfinished".}
   type
     HttpMethod = enum
       HttpGet, HttpPost

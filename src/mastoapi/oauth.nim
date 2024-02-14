@@ -1,13 +1,8 @@
-import private/common
-import apps
+import private/[common, http]
+import types
+export types
 
 const prefix = "/oauth"
-
-type
-  Token* = object ## Defined in https://docs.joinmastodon.org/entities/Token/
-    access_token*, token_type*: string
-    scope*: string
-    created_at*: DateTime ## This is converted from a Unix Epoch timestamp
 
 proc createTokenRaw*(instance: string, app: Application, user_code: string = ""): Option[JsonNode] = 
   
@@ -32,7 +27,7 @@ proc createTokenRaw*(instance: string, app: Application, user_code: string = "")
     "scopes": app.scopes
   })
 
-  var response = newHttpClient().request(url, HttpPost, "", nil, data)
+  var response = newHttpClient(msapiUserAgent).request(url, HttpPost, "", newHttpHeaders(), data)
 
   if getCode(response) != 200: return none(JsonNode)
 
@@ -60,5 +55,6 @@ proc createToken*(instance: string, app: Application, user_code: string = ""): O
   obj.scope = app.scopes
 
   json.unixTimestamp(obj.created_at, "created_at")
+  obj.instance = instance
 
   return some(obj)

@@ -1,9 +1,7 @@
 import private/common
+import types
+export types
 
-type
-  Emoji* = object ## Defined in https://docs.joinmastodon.org/entities/CustomEmoji/
-    shortcode*, url*, static_url*, category*: string
-    visible_in_picker*: bool
 
 proc parseEmojis*(json: JsonNode): seq[Emoji] =
   result = @[]
