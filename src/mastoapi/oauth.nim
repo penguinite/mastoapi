@@ -4,8 +4,7 @@ export types
 
 const prefix = "/oauth"
 
-proc createTokenRaw*(instance: string, app: Application, user_code: string = ""): Option[JsonNode] = 
-  
+proc createTokenRaw*(instance, client_id, client_secret, redirect_uri, scopes: string , user_code: string = ""): Option[JsonNode] = 
   let url = instance & prefix & "/token"
 
   var data = newMultipartData()
@@ -21,10 +20,10 @@ proc createTokenRaw*(instance: string, app: Application, user_code: string = "")
     data.set({"grant_type": "client_credentials"})
 
   data.set({
-    "client_id": app.client_id,
-    "client_secret": app.client_secret,
-    "redirect_uri": app.redirect_uri,
-    "scopes": app.scopes
+    "client_id": client_id,
+    "client_secret": client_secret,
+    "redirect_uri": redirect_uri,
+    "scopes": scopes
   })
 
   var response = newHttpClient(msapiUserAgent).request(url, HttpPost, "", newHttpHeaders(), data)
@@ -33,13 +32,17 @@ proc createTokenRaw*(instance: string, app: Application, user_code: string = "")
 
   return some(getBody(response).parseJson())
 
-proc createToken*(instance: string, app: Application, user_code: string = ""): Option[Token] = 
+
+proc createTokenRaw*(instance: string, app: Application, user_code: string = ""): Option[JsonNode] = 
+  return createTokenRaw(instance, app.client_id, app.client_secret, app.redirect_uri, app.scopes, user_code)
+
+proc createToken*(instance, client_id, client_secret, redirect_uri, scopes: string , user_code: string = ""): Option[Token] = 
   ## https://docs.joinmastodon.org/methods/oauth/#token
   ## the `user_code` parameter should only be filled if you want to use a user authorization code.
   ## Do not fill it if you want app-only access, ie `client_credentials` grant type.
   ## Remember to make sure the api.app object is filled with createApp() or importApp()
   ## Otherwise the API will throw out an error.
-  let jayson = createTokenRaw(instance, app, user_code)
+  let jayson = createTokenRaw(instance, client_id, client_secret, redirect_uri, scopes, user_code)
 
   if isNone(jayson): return none(Token)
 
@@ -52,9 +55,12 @@ proc createToken*(instance: string, app: Application, user_code: string = ""): O
 
   json.safeString(obj.access_token, "access_token")
   json.safeString(obj.token_type, "token_type")  
-  obj.scope = app.scopes
+  obj.scope = scopes
 
   json.unixTimestamp(obj.created_at, "created_at")
   obj.instance = instance
 
   return some(obj)
+
+proc createToken*(instance: string, app: Application, user_code: string = ""): Option[Token] = 
+  return createToken(instance, app.client_id, app.client_secret, app.redirect_uri, app.scopes, user_code)
