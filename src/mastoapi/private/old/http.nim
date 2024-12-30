@@ -1,9 +1,9 @@
-
+{.deprecated: "DO NOT USE, THIS IS EXTREMELY BROKEN.".}
 
 ## Wraps over various different HTTP client implementations.
 ## This wrapper tries to mimic std/httpclient as reasonably as possible.
 
-const msapiHttpClient*{.strdefine.} = "httpclient"
+const msapiHttpClient*{.strdefine.} = "puppy"
 const msapiUserAgent*{.strdefine.} = "MastoAPI for Nim"
 const msapiTimeout*{.intdefine.} = 60
 const msapiSchemeUpgrade*{.booldefine.} = true
