@@ -1,8 +1,19 @@
+{.define:ssl.}
+import std/[strutils, httpclient], private/common
+export Instance, APIError, toHumanString
 
-type
-  Instance* = object
-    url*: string ## The URL of the instance being used
-    version*: (int, int, int) ## The version of the instance being used
+func parseInstanceVersion*(ver: string): (int, int, int) =
+  ## Parses an instance version (string given out by the /api/v1/instance or /api/v2/instance API routes)
+  
+  # We know the version must have at least 3 dots
+  # So we split the string by dots
+  # and parseInt() elements 0, 1 and 2 to get our results.
+  let s = ver.split('.')
+  return (
+    parseInt(s[0]),
+    parseInt(s[1]),
+    parseInt(s[2])
+  )
 
 proc newInstance*(url: string): Instance =
   ## Returns an Instance object, ready for use.
@@ -14,6 +25,25 @@ proc newInstance*(url: string): Instance =
   result.url = url
   if url[high(url)] != '/':
     result.url.add('/')
+  
+  let client = newHttpClient()
+  # We try /api/v2/instance first...
+  # If it fails, then we try the older API.
+  var response = client.request(
+    result.url & "api/v2/instance",
+    httpMethod = HttpGet
+  )
+
+  if getCode(response) == 200:
+    let json = parseJson(getBody(response))
+    result.version = parseInstanceVersion(json["version"].getStr())
+    return result
+
+  # We try old API now :)
+  
+  response = client.request(
+    result.url & 
+  )
   
   
 
@@ -29,11 +59,3 @@ proc newInstance*(url: string): Instance =
 
 # API Error core.
 
-type APIError* {.pure.} = enum # An enum uniquely identifying every error, intended for non-human consumption.
-  ConnectionFailed, InvalidCall
-
-func toHumanError*(e: APIError): string =
-  ## Takes a machine-readable APIError enum and returns a human-readable string intended for diagnostics or logging.
-  case e:
-  of ConnectioNFailed: return "Couldn't connect to the server."
-  of InvalidCall: return "MastoAPI server doesn't support this API route/call"

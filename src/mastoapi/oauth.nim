@@ -1,4 +1,5 @@
-import results, private/common
+{.define: ssl.}
+import results, std/[httpclient, json], private/common
 
 type
   OAuthInfo* = object
@@ -10,9 +11,36 @@ type
 
 
 proc getOAuthInfo*(url: string, client = newHttpClient()): Result[OAuthInfo, APIError] =
-  let json = parseJson(getContent())
-  echo "Ok"
-  return
+  ## Queries the OAuth authorization API and returns an object with all the valuable info.
+  ## 
+  ## If the server doesn't support this API then an InvalidCall error is returned.
+  let response = client.request(
+    url & ".well-known/oauth-authorization-server",
+    httpMethod = HttpGet
+  )
+
+  if getCode(response) != 200:
+    result.err(AE.InvalidCall)
+    return
+
+  try:
+    let json = parseJson(getBody(response))
+
+    # We have to unpack the list ourselves cause
+    # std/json doesn't provide a convenient getStrElems()
+    var scopes: seq[string]
+    for elem in json["scopes_supported"].getElems():
+      scopes.add(elem.getStr())
+
+    result.ok OAuthInfo(
+      authorization_endpoint: json["authorization_endpoint"].getStr(),
+      token_endpoint: json["token_endpoint"].getStr(),
+      app_registration_endpoint: json["app_registration_endpoint"].getStr(),
+      revocation_endpoint: json["revocation_endpoint"].getStr(),
+      supported_scopes: scopes
+    )
+  except:
+    result.err(AE.ResponseParseFail) # TODO: Maybe this type of error handling is bad?
 
 
 proc getOAuthInfo*(ins: Instance): Result[OAuthInfo, APIError] =
@@ -23,6 +51,9 @@ proc getOAuthInfo*(ins: Instance): Result[OAuthInfo, APIError] =
   result.err(AE.InvalidCall)
 
 
-discard getOAuthInfo(Instance(
-  url: "a", version: (4,1,0)
-))
+echo getOAuthInfo(
+  Instance(
+    url: "https://mastodon.social",
+    version: (4,3,0)
+  )
+)
