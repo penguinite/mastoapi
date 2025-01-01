@@ -3,7 +3,7 @@ import std/[httpclient, strutils, json, times], private/common, results
 export APIError, toHumanError, results
 
 type
-  Application* = object ## Defined in https://docs.joinmastodon.org/entities/Application/
+  Application* = object of RootObj ## Defined in https://docs.joinmastodon.org/entities/Application/
     name*: string
     website*: string
     vapid_key*: string ## May be removed in favor of a standalone proc or object.
@@ -18,9 +18,9 @@ type
 proc createApp*(
   url, name, website: string, 
   scopes: seq[string],
-  redirect_uris: seq[string] = @[]
+  redirect_uris: seq[string] = @[],
+  client = newHttpClient()
 ): Result[APIError, CredentialApplication] =
   let response = client.request(
     url & "api/v1/apps",
-    
   )
