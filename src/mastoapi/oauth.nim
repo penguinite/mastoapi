@@ -1,5 +1,6 @@
-{.define: ssl.}
-import results, std/[httpclient, json], private/common
+{.define:ssl.}
+import std/[httpclient, json], private/common, results
+export Instance, APIError, toHumanError, results
 
 type
   OAuthInfo* = object

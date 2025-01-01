@@ -1,6 +1,6 @@
 {.define:ssl.}
-import std/[strutils, httpclient], private/common
-export Instance, APIError, toHumanString
+import std/[httpclient, strutils, json], private/common, results
+export Instance, APIError, toHumanError, results
 
 func parseInstanceVersion*(ver: string): (int, int, int) =
   ## Parses an instance version (string given out by the /api/v1/instance or /api/v2/instance API routes)
@@ -42,20 +42,13 @@ proc newInstance*(url: string): Instance =
   # We try old API now :)
   
   response = client.request(
-    result.url & 
+    result.url & "api/v1/instance",
+    httpMethod = HttpGet
   )
-  
-  
 
-## Comparators
-#proc `>=`*(a,b: (int, int, int)): bool =
-#  return a[0] >= b[0] and a[1] >= b[1] and a[2] >= b[2]
-#proc `>`*(a,b: (int, int, int)): bool =
-#  return a[0] > b[0] and a[1] > b[1] and a[2] > b[2]
-#proc `<=`*(a,b: (int, int, int)): bool =
-#  return a[0] <= b[0] and a[1] <= b[1] and a[2] <= b[2]
-#proc `<`*(a,b: (int, int, int)): bool =
-#  return a[0] < b[0] and a[1] < b[1] and a[2] < b[2]
+  if getCode(response) == 200:
+    let json = parseJson(getBody(response))
+    result.version = parseInstanceVersion(json["version"].getStr())
+    return result
 
-# API Error core.
-
+  result.version = (0,0,0) # Unknown version.

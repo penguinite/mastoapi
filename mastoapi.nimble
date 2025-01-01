@@ -3,7 +3,7 @@
 version       = "0.1.0"
 author        = "penguinite"
 description   = "Mastodon API library for Nim"
-license       = "BSD-3-Clause"
+license       = "AGPL-3.0-or-later"
 srcDir        = "src"
 
 
