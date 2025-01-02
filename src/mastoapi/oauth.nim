@@ -11,7 +11,7 @@ type
     supported_scopes*: seq[string] ## A list of scopes that are supported by this server
 
 
-proc getOAuthInfo*(url: string, client = newHttpClient()): Result[OAuthInfo, APIError] =
+proc getOAuthInfo*(url: string, client: HttpClient | AsyncHttpClient = newHttpClient()): Result[OAuthInfo, APIError] =
   ## Queries the OAuth authorization API and returns an object with all the valuable info.
   ## 
   ## If the server doesn't support this API then an InvalidCall error is returned.
@@ -44,17 +44,9 @@ proc getOAuthInfo*(url: string, client = newHttpClient()): Result[OAuthInfo, API
     result.err(AE.ResponseParseFail) # TODO: Maybe this type of error handling is bad?
 
 
-proc getOAuthInfo*(ins: Instance): Result[OAuthInfo, APIError] =
+proc getOAuthInfo*(ins: Instance, client: HttpClient | AsyncHttpClient = newHttpClient()): Result[OAuthInfo, APIError] =
   # This interface was added in Mastodon 4.3.0
   # So we just throw an error if the instance's version is less than 4.3.0
   if ins.version >= (4,3,0):
-    return getOAuthInfo(ins.url)
+    return getOAuthInfo(ins.url, client)
   result.err(AE.InvalidCall)
-
-
-echo getOAuthInfo(
-  Instance(
-    url: "https://mastodon.social",
-    version: (4,3,0)
-  )
-)

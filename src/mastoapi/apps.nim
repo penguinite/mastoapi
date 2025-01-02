@@ -16,11 +16,25 @@ type
     secret_expiration*: DateTime
 
 proc createApp*(
-  url, name, website: string, 
-  scopes: seq[string],
-  redirect_uris: seq[string] = @[],
-  client = newHttpClient()
+  url, name: string,
+  website = "", 
+  scopes = @["read"],
+  redirect_uris = @["urn:ietf:wg:oauth:2.0:oob"],
+  client: HttpClient | AsyncHttpClient = newHttpClient()
 ): Result[APIError, CredentialApplication] =
+  
+
+  var headers: HttpHeaders
+  headers.set(
+    {"Content-Type": "application/json"}
+  )
+
   let response = client.request(
     url & "api/v1/apps",
+    httpMethod = HttpPost,
+    header
+    body = $(%* {"client_name": name,"redirect_uris": redirect_uris,"scopes": scopes,"website": website})
   )
+
+
+
